@@ -42,13 +42,13 @@ struct ContentView: View {
                                     Text(style.rawValue)
                                 }
                             }
-                            Picker("SDF:", selection: $userSettings.atomStyleSDF) {
+                            Picker("SDF/XYZ:", selection: $userSettings.atomStyleSDF) {
                                 ForEach(Settings.AtomStyle.allCases) { style in
                                     Text(style.rawValue)
                                 }
                             }
-                            Toggle("Orient SDF to widest face", isOn: $userSettings.orientSDFToWidestFace)
-                                .help("Show SDF molecules face-on with their longest axis horizontal.")
+                            Toggle("Orient SDF/XYZ to widest face", isOn: $userSettings.orientSDFToWidestFace)
+                                .help("Show SDF and XYZ molecules face-on with their longest axis horizontal.")
                         }.padding()
                         
                         Text("General display settings").font(.headline)
