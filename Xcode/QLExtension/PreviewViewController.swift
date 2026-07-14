@@ -78,7 +78,8 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
             atomStyle = userSettings.atomStylePDB // use PDB style as default
         }
         
-        let html = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: url.path, dataFormat: fileExtension, atomStyle: atomStyle, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor)
+        let orientToWidestFace = fileExtension == "sdf" && userSettings.orientSDFToWidestFace
+        let html = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: url.path, dataFormat: fileExtension, atomStyle: atomStyle, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor, orientToWidestFace: orientToWidestFace)
         
         let baseUrl = URL(fileURLWithPath: htmlPath!)
         self.webView?.loadHTMLString(html, baseURL: baseUrl)
