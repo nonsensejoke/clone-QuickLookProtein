@@ -7,21 +7,247 @@
     <body>
         <div style="height: 100vh; width: 100%; position: relative;" id="3dviewer"></div>
         <script>
+            function isFinitePoint(atom) {
+                return Number.isFinite(atom.x) && Number.isFinite(atom.y) && Number.isFinite(atom.z);
+            }
+
+            function normalizeVector(vector) {
+                let length = Math.hypot(vector.x, vector.y, vector.z);
+                if (!Number.isFinite(length) || length < 1e-8) {
+                    return null;
+                }
+                return {x: vector.x / length, y: vector.y / length, z: vector.z / length};
+            }
+
+            function crossProduct(a, b) {
+                return {
+                    x: a.y * b.z - a.z * b.y,
+                    y: a.z * b.x - a.x * b.z,
+                    z: a.x * b.y - a.y * b.x
+                };
+            }
+
+            function covarianceMatrix(points) {
+                let center = points.reduce((sum, point) => ({
+                    x: sum.x + point.x,
+                    y: sum.y + point.y,
+                    z: sum.z + point.z
+                }), {x: 0, y: 0, z: 0});
+
+                center.x /= points.length;
+                center.y /= points.length;
+                center.z /= points.length;
+
+                let matrix = [
+                    [0, 0, 0],
+                    [0, 0, 0],
+                    [0, 0, 0]
+                ];
+
+                for (let point of points) {
+                    let x = point.x - center.x;
+                    let y = point.y - center.y;
+                    let z = point.z - center.z;
+
+                    matrix[0][0] += x * x;
+                    matrix[0][1] += x * y;
+                    matrix[0][2] += x * z;
+                    matrix[1][1] += y * y;
+                    matrix[1][2] += y * z;
+                    matrix[2][2] += z * z;
+                }
+
+                matrix[0][0] /= points.length;
+                matrix[0][1] /= points.length;
+                matrix[0][2] /= points.length;
+                matrix[1][1] /= points.length;
+                matrix[1][2] /= points.length;
+                matrix[2][2] /= points.length;
+
+                matrix[1][0] = matrix[0][1];
+                matrix[2][0] = matrix[0][2];
+                matrix[2][1] = matrix[1][2];
+
+                return matrix;
+            }
+
+            function jacobiEigenDecomposition(matrix) {
+                let a = matrix.map(row => row.slice());
+                let vectors = [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1]
+                ];
+
+                for (let iteration = 0; iteration < 32; iteration++) {
+                    let p = 0;
+                    let q = 1;
+                    if (Math.abs(a[0][2]) > Math.abs(a[p][q])) {
+                        p = 0;
+                        q = 2;
+                    }
+                    if (Math.abs(a[1][2]) > Math.abs(a[p][q])) {
+                        p = 1;
+                        q = 2;
+                    }
+
+                    if (Math.abs(a[p][q]) < 1e-10) {
+                        break;
+                    }
+
+                    let app = a[p][p];
+                    let aqq = a[q][q];
+                    let apq = a[p][q];
+                    let theta = (aqq - app) / (2 * apq);
+                    let thetaSign = theta < 0 ? -1 : 1;
+                    let t = theta === 0 ? 1 : thetaSign / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+                    let c = 1 / Math.sqrt(t * t + 1);
+                    let s = t * c;
+
+                    for (let i = 0; i < 3; i++) {
+                        if (i !== p && i !== q) {
+                            let aip = a[i][p];
+                            let aiq = a[i][q];
+                            a[i][p] = c * aip - s * aiq;
+                            a[p][i] = a[i][p];
+                            a[i][q] = s * aip + c * aiq;
+                            a[q][i] = a[i][q];
+                        }
+                    }
+
+                    a[p][p] = c * c * app - 2 * s * c * apq + s * s * aqq;
+                    a[q][q] = s * s * app + 2 * s * c * apq + c * c * aqq;
+                    a[p][q] = 0;
+                    a[q][p] = 0;
+
+                    for (let i = 0; i < 3; i++) {
+                        let vip = vectors[i][p];
+                        let viq = vectors[i][q];
+                        vectors[i][p] = c * vip - s * viq;
+                        vectors[i][q] = s * vip + c * viq;
+                    }
+                }
+
+                return [0, 1, 2].map(index => ({
+                    value: a[index][index],
+                    vector: normalizeVector({
+                        x: vectors[0][index],
+                        y: vectors[1][index],
+                        z: vectors[2][index]
+                    })
+                }));
+            }
+
+            function quaternionFromRotationMatrix(matrix) {
+                let trace = matrix[0][0] + matrix[1][1] + matrix[2][2];
+                let x;
+                let y;
+                let z;
+                let w;
+
+                if (trace > 0) {
+                    let s = Math.sqrt(trace + 1) * 2;
+                    w = 0.25 * s;
+                    x = (matrix[2][1] - matrix[1][2]) / s;
+                    y = (matrix[0][2] - matrix[2][0]) / s;
+                    z = (matrix[1][0] - matrix[0][1]) / s;
+                }
+                else if (matrix[0][0] > matrix[1][1] && matrix[0][0] > matrix[2][2]) {
+                    let s = Math.sqrt(1 + matrix[0][0] - matrix[1][1] - matrix[2][2]) * 2;
+                    w = (matrix[2][1] - matrix[1][2]) / s;
+                    x = 0.25 * s;
+                    y = (matrix[0][1] + matrix[1][0]) / s;
+                    z = (matrix[0][2] + matrix[2][0]) / s;
+                }
+                else if (matrix[1][1] > matrix[2][2]) {
+                    let s = Math.sqrt(1 + matrix[1][1] - matrix[0][0] - matrix[2][2]) * 2;
+                    w = (matrix[0][2] - matrix[2][0]) / s;
+                    x = (matrix[0][1] + matrix[1][0]) / s;
+                    y = 0.25 * s;
+                    z = (matrix[1][2] + matrix[2][1]) / s;
+                }
+                else {
+                    let s = Math.sqrt(1 + matrix[2][2] - matrix[0][0] - matrix[1][1]) * 2;
+                    w = (matrix[1][0] - matrix[0][1]) / s;
+                    x = (matrix[0][2] + matrix[2][0]) / s;
+                    y = (matrix[1][2] + matrix[2][1]) / s;
+                    z = 0.25 * s;
+                }
+
+                let length = Math.hypot(x, y, z, w);
+                if (!Number.isFinite(length) || length < 1e-8) {
+                    return null;
+                }
+                return {x: x / length, y: y / length, z: z / length, w: w / length};
+            }
+
+            function applyWidestFaceOrientation(viewer) {
+                let points = viewer.selectedAtoms({}).filter(isFinitePoint);
+                if (points.length < 3) {
+                    return false;
+                }
+
+                let eigen = jacobiEigenDecomposition(covarianceMatrix(points));
+                if (eigen.some(entry => entry.vector === null || !Number.isFinite(entry.value))) {
+                    return false;
+                }
+
+                eigen.sort((a, b) => b.value - a.value);
+
+                let horizontalAxis = eigen[0].vector;
+                var viewAxis = eigen[2].vector;
+                if (eigen[0].value - eigen[2].value < 1e-10) {
+                    return false;
+                }
+
+                let verticalAxis = normalizeVector(crossProduct(viewAxis, horizontalAxis));
+                if (verticalAxis === null) {
+                    return false;
+                }
+
+                viewAxis = normalizeVector(crossProduct(horizontalAxis, verticalAxis));
+                if (viewAxis === null) {
+                    return false;
+                }
+
+                let rotationMatrix = [
+                    [horizontalAxis.x, horizontalAxis.y, horizontalAxis.z],
+                    [verticalAxis.x, verticalAxis.y, verticalAxis.z],
+                    [viewAxis.x, viewAxis.y, viewAxis.z]
+                ];
+
+                let quaternion = quaternionFromRotationMatrix(rotationMatrix);
+                if (quaternion === null) {
+                    return false;
+                }
+
+                let view = viewer.getView();
+                view[4] = quaternion.x;
+                view[5] = quaternion.y;
+                view[6] = quaternion.z;
+                view[7] = quaternion.w;
+                viewer.setView(view);
+                return true;
+            }
+
             $(function() {
                 let element = $('#3dviewer');
                 let config = { };
                 let viewer = $3Dmol.createViewer( element, config );
                 
                 let data = `{PDB_DATA}`;
+                let orientToWidestFace = {ORIENT_TO_WIDEST_FACE};
                 
                 viewer.setBackgroundColor(0x{BG_COLOR}, {BG_ALPHA});
                 viewer.addModel(data, "{DATA_FORMAT}");
                 viewer.setStyle({{ATOM_STYLE}: {color: 'spectrum'}});
                 viewer.zoomTo();
+                if (orientToWidestFace) {
+                    applyWidestFaceOrientation(viewer);
+                }
                 viewer.render();
                 viewer.spin("y", {ROTATION_SPEED})
             });
         </script>
     </body>
 </html>
-
