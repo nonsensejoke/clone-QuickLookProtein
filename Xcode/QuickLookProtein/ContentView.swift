@@ -18,9 +18,9 @@ struct ContentView: View {
         let cifPath = Bundle.main.path(forResource: "1565673", ofType: "cif")
         let sdfPath = Bundle.main.path(forResource: "PQQ", ofType: "sdf")
         
-        let htmlPDB = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: pdbPath!, dataFormat: "pdb", atomStyle: userSettings.atomStylePDB, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor)
-        let htmlCIF = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: cifPath!, dataFormat: "cif", atomStyle: userSettings.atomStyleCIF, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor)
-        let htmlSDF = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: sdfPath!, dataFormat: "sdf", atomStyle: userSettings.atomStyleSDF, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor)
+        let htmlPDB = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: pdbPath!, dataFormat: "pdb", atomStyle: userSettings.atomStylePDB, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor, orientToWidestFace: false)
+        let htmlCIF = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: cifPath!, dataFormat: "cif", atomStyle: userSettings.atomStyleCIF, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor, orientToWidestFace: false)
+        let htmlSDF = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: sdfPath!, dataFormat: "sdf", atomStyle: userSettings.atomStyleSDF, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor, orientToWidestFace: userSettings.orientSDFToWidestFace)
         
         let baseUrl = URL(fileURLWithPath: htmlPath!)
         
@@ -47,6 +47,8 @@ struct ContentView: View {
                                     Text(style.rawValue)
                                 }
                             }
+                            Toggle("Orient SDF to widest face", isOn: $userSettings.orientSDFToWidestFace)
+                                .help("Show SDF molecules face-on with their longest axis horizontal.")
                         }.padding()
                         
                         Text("General display settings").font(.headline)
