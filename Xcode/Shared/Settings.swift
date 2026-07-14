@@ -16,6 +16,8 @@ class SettingsStorage: ObservableObject {
     var atomStylePDB: Settings.AtomStyle = .cartoon
     @AppStorage("atomStyleSDF", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
     var atomStyleSDF: Settings.AtomStyle = .stick
+    @AppStorage("orientSDFToWidestFace", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
+    var orientSDFToWidestFace: Bool = true
     
     @AppStorage("rotationSpeed", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
     var rotationSpeed: Settings.RotationSpeed = .medium

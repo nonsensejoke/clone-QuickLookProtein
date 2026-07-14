@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-func prepare3DmolHTML(htmlPath: String, pdbPath: String, dataFormat: String, atomStyle: Settings.AtomStyle, rotationSpeed: Settings.RotationSpeed, bgColor: Color) -> String {
+func prepare3DmolHTML(htmlPath: String, pdbPath: String, dataFormat: String, atomStyle: Settings.AtomStyle, rotationSpeed: Settings.RotationSpeed, bgColor: Color, orientToWidestFace: Bool = false) -> String {
     var html: String
 
     do {
@@ -36,6 +36,7 @@ func prepare3DmolHTML(htmlPath: String, pdbPath: String, dataFormat: String, ato
     html = html.replacingOccurrences(of: "{BG_ALPHA}", with: convertColorToRGB(color: bgColor).alpha)
     html = html.replacingOccurrences(of: "{ROTATION_SPEED}", with: String(rotationSpeed.rotationSpeedNumber()))
     html = html.replacingOccurrences(of: "{DATA_FORMAT}", with: dataFormat)
+    html = html.replacingOccurrences(of: "{ORIENT_TO_WIDEST_FACE}", with: orientToWidestFace ? "true" : "false")
     
     return html
 }
