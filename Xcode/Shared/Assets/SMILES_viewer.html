@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            html,
+            body {
+                min-height: 100%;
+                margin: 0;
+            }
+
+            body {
+                background: rgba({BG_COLOR_RGB}, {BG_ALPHA});
+                color: #1f2328;
+                font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+                overflow-y: auto;
+            }
+
+            #smilesList {
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+                min-height: 100vh;
+                padding: 18px;
+            }
+
+            .molecule {
+                border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+                padding-bottom: 18px;
+                text-align: center;
+            }
+
+            .molecule:last-child {
+                border-bottom: 0;
+            }
+
+            .molecule img {
+                display: block;
+                height: auto;
+                margin: 0 auto 10px;
+                max-height: 280px;
+                max-width: min(92vw, 720px);
+                object-fit: contain;
+            }
+
+            .molecule-title {
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .molecule-line {
+                color: #5f6874;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                font-size: 12px;
+                overflow-wrap: anywhere;
+            }
+
+            .error {
+                color: #b42318;
+                font-size: 13px;
+                margin: 10px 0;
+            }
+
+            .empty {
+                align-items: center;
+                color: #5f6874;
+                display: flex;
+                flex: 1;
+                justify-content: center;
+                min-height: calc(100vh - 36px);
+            }
+        </style>
+    </head>
+    <body>
+        <main id="smilesList"></main>
+        <script id="quicklookprotein-smiles-viewer-script">
+            const DEFAULT_CDK_DEPICT_BASE_URL = "https://www.simolecule.com/cdkdepict/depict";
+
+            function splitSMILESLines(data) {
+                return String(data || "")
+                    .replace(/\r\n/g, "\n")
+                    .replace(/\r/g, "\n")
+                    .split("\n")
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+            }
+
+            function normalizeDepictBaseURL(baseURL) {
+                let normalized = String(baseURL || "").trim();
+                if (normalized.length === 0) {
+                    return DEFAULT_CDK_DEPICT_BASE_URL;
+                }
+
+                normalized = normalized.replace(/\/+$/, "");
+                if (!/\/depict$/i.test(normalized)) {
+                    normalized += "/depict";
+                }
+
+                return normalized;
+            }
+
+            function depictURLForLine(smilesLine, baseURL) {
+                const endpoint = normalizeDepictBaseURL(baseURL) + "/bot/png";
+                const query = [
+                    "smi=" + encodeURIComponent(smilesLine),
+                    "w=-1",
+                    "h=-1",
+                    "abbr=off",
+                    "hdisp=P",
+                    "zoom=1.3",
+                    "annotate=none",
+                    "r=0"
+                ].join("&");
+
+                return endpoint + "?" + query;
+            }
+
+            function titleFromSMILESLine(smilesLine) {
+                const trimmed = String(smilesLine || "").trim();
+                const match = trimmed.match(/^\S+\s+(.+)$/);
+                return match && match[1].trim().length > 0 ? match[1].trim() : "Molecule";
+            }
+
+            function renderSMILESLines(container, smilesData, baseURL) {
+                const lines = splitSMILESLines(smilesData);
+                container.textContent = "";
+
+                if (lines.length === 0) {
+                    const empty = document.createElement("div");
+                    empty.className = "empty";
+                    empty.textContent = "No SMILES records found";
+                    container.appendChild(empty);
+                    return;
+                }
+
+                for (const line of lines) {
+                    const entry = document.createElement("section");
+                    entry.className = "molecule";
+
+                    const image = document.createElement("img");
+                    image.alt = titleFromSMILESLine(line);
+                    image.loading = "lazy";
+                    image.src = depictURLForLine(line, baseURL);
+                    image.onerror = function() {
+                        image.style.display = "none";
+                        const error = document.createElement("div");
+                        error.className = "error";
+                        error.textContent = "Unable to load CDK depiction";
+                        entry.insertBefore(error, title);
+                    };
+
+                    const title = document.createElement("div");
+                    title.className = "molecule-title";
+                    title.textContent = titleFromSMILESLine(line);
+
+                    const source = document.createElement("div");
+                    source.className = "molecule-line";
+                    source.textContent = line;
+
+                    entry.appendChild(image);
+                    entry.appendChild(title);
+                    entry.appendChild(source);
+                    container.appendChild(entry);
+                }
+            }
+
+            if (typeof module !== "undefined") {
+                module.exports = {
+                    splitSMILESLines: splitSMILESLines,
+                    normalizeDepictBaseURL: normalizeDepictBaseURL,
+                    depictURLForLine: depictURLForLine,
+                    titleFromSMILESLine: titleFromSMILESLine,
+                    renderSMILESLines: renderSMILESLines
+                };
+            }
+
+            if (typeof document !== "undefined") {
+                document.addEventListener("DOMContentLoaded", function() {
+                    renderSMILESLines(
+                        document.getElementById("smilesList"),
+                        {SMILES_DATA},
+                        {CDK_DEPICT_BASE_URL}
+                    );
+                });
+            }
+        </script>
+    </body>
+</html>

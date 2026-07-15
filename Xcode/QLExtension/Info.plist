@@ -22,6 +22,11 @@
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSExtension</key>
 	<dict>
 		<key>NSExtensionAttributes</key>
@@ -39,6 +44,8 @@
 				<string>dyn.ah62d4rv4ge81g3dg</string>
 				<string>dyn.ah62d4rv4ge81u8p4</string>
 				<string>dyn.ah62d4rv4ge80455qgk</string>
+				<string>dyn.ah62d4rv4ge81g5pm</string>
+				<string>com.jethrohemmann.smiles</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>
 			<false/>
@@ -48,5 +55,28 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).PreviewViewController</string>
 	</dict>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.plain-text</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>SMILES chemical structure text</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.jethrohemmann.smiles</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>smi</string>
+					<string>smiles</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>chemical/x-daylight-smiles</string>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

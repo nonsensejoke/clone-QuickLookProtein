@@ -16,6 +16,8 @@
 		4B0FDF9B26C9A38000C94DDE /* PreviewViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4B0FDF9926C9A38000C94DDE /* PreviewViewController.xib */; };
 		4B0FDFA026C9A38000C94DDE /* QuickLookProtein Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4B0FDF9226C9A38000C94DDE /* QuickLookProtein Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4B0FDFA926C9A45B00C94DDE /* 3Dmol_viewer.html in Resources */ = {isa = PBXBuildFile; fileRef = 4B0FDFA826C9A45B00C94DDE /* 3Dmol_viewer.html */; };
+		46F736AF06FE456593E42128 /* SMILES_viewer.html in Resources */ = {isa = PBXBuildFile; fileRef = 46F736AF06FE456593E42127 /* SMILES_viewer.html */; };
+		46F736AF06FE456593E42129 /* SMILES_viewer.html in Resources */ = {isa = PBXBuildFile; fileRef = 46F736AF06FE456593E42127 /* SMILES_viewer.html */; };
 		4B20116126D2692200B77CEF /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20116026D2692200B77CEF /* Settings.swift */; };
 		4B20116226D2692200B77CEF /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B20116026D2692200B77CEF /* Settings.swift */; };
 		4B20116F26D2D43B00B77CEF /* 3Dmol_viewer.html in Resources */ = {isa = PBXBuildFile; fileRef = 4B0FDFA826C9A45B00C94DDE /* 3Dmol_viewer.html */; };
@@ -68,6 +70,7 @@
 		4B0FDF9C26C9A38000C94DDE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4B0FDF9D26C9A38000C94DDE /* QLExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QLExtension.entitlements; sourceTree = "<group>"; };
 		4B0FDFA826C9A45B00C94DDE /* 3Dmol_viewer.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = 3Dmol_viewer.html; sourceTree = "<group>"; };
+		46F736AF06FE456593E42127 /* SMILES_viewer.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = SMILES_viewer.html; sourceTree = "<group>"; };
 		4B20116026D2692200B77CEF /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		4B450AC226D2D6D1007F0A39 /* SharedFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedFunctions.swift; sourceTree = "<group>"; };
 		4B99E5C426E4FD7200B44AD9 /* VersionCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VersionCheck.swift; sourceTree = "<group>"; };
@@ -173,6 +176,7 @@
 			children = (
 				4BED22A22821CD6D003F66A0 /* 3Dmol.js */,
 				4B0FDFA826C9A45B00C94DDE /* 3Dmol_viewer.html */,
+				46F736AF06FE456593E42127 /* SMILES_viewer.html */,
 			);
 			path = Assets;
 			sourceTree = "<group>";
@@ -274,6 +278,7 @@
 				4BE18E06281F3D0200034BE4 /* 6oc6.pdb in Resources */,
 				4BE18E04281F3B4900034BE4 /* 1565673.cif in Resources */,
 				4B20116F26D2D43B00B77CEF /* 3Dmol_viewer.html in Resources */,
+				46F736AF06FE456593E42128 /* SMILES_viewer.html in Resources */,
 				4B0FDF8326C9A32100C94DDE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -283,6 +288,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B0FDFA926C9A45B00C94DDE /* 3Dmol_viewer.html in Resources */,
+				46F736AF06FE456593E42129 /* SMILES_viewer.html in Resources */,
 				4BED22A42821CD6D003F66A0 /* 3Dmol.js in Resources */,
 				4B0FDF9B26C9A38000C94DDE /* PreviewViewController.xib in Resources */,
 			);

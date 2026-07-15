@@ -34,6 +34,33 @@ func prepare3DmolHTML(htmlPath: String, pdbPath: String, dataFormat: String, ato
     return html
 }
 
+func prepareSMILESHTML(htmlPath: String, smilesPath: String, cdkDepictBaseURL: String, bgColor: Color) -> String {
+    var html: String
+
+    do {
+        html = try String(contentsOfFile: htmlPath, encoding: .utf8)
+
+        let smiles = try String(contentsOfFile: smilesPath)
+        let encodedSMILES = try String(data: JSONEncoder().encode(smiles), encoding: .utf8)!
+        let encodedBaseURL = try String(data: JSONEncoder().encode(cdkDepictBaseURL), encoding: .utf8)!
+        let color = convertColorToRGB(color: bgColor)
+        let rgb = color.rgbHex
+        let red = Int(rgb.prefix(2), radix: 16) ?? 255
+        let green = Int(rgb.dropFirst(2).prefix(2), radix: 16) ?? 255
+        let blue = Int(rgb.dropFirst(4).prefix(2), radix: 16) ?? 255
+
+        html = html.replacingOccurrences(of: "{SMILES_DATA}", with: encodedSMILES)
+        html = html.replacingOccurrences(of: "{CDK_DEPICT_BASE_URL}", with: encodedBaseURL)
+        html = html.replacingOccurrences(of: "{BG_COLOR_RGB}", with: "\(red), \(green), \(blue)")
+        html = html.replacingOccurrences(of: "{BG_ALPHA}", with: color.alpha)
+    }
+    catch {
+        html = "Error while loading SMILES HTML or data"
+    }
+
+    return html
+}
+
 
 // https://gist.github.com/gobijan/d724de27e2aff8131676
 func convertColorToRGB(color: Color) -> (rgbHex: String, alpha: String) {

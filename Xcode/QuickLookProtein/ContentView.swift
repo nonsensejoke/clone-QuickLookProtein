@@ -50,6 +50,16 @@ struct ContentView: View {
                             Toggle("Orient SDF/XYZ/MOL2 to widest face", isOn: $userSettings.orientSDFToWidestFace)
                                 .help("Show SDF, XYZ, and MOL2 molecules face-on with their longest axis horizontal.")
                         }.padding()
+
+                        Text("SMILES display settings").font(.headline)
+
+                        Form {
+                            TextField("CDK Depict service URL", text: $userSettings.cdkDepictBaseURL)
+                                .help("Default: https://www.simolecule.com/cdkdepict/depict. Local services such as http://localhost:8081 are normalized to /depict.")
+                            Button(action: resetCDKDepictBaseURL) {
+                                Text("Reset CDK Depict URL")
+                            }
+                        }.padding()
                         
                         Text("General display settings").font(.headline)
                         
@@ -140,6 +150,10 @@ struct ContentView: View {
     
     func resetColor() {
         userSettings.bgColor = Color(.sRGB, red: 0, green: 0, blue: 0, opacity: 0)
+    }
+
+    func resetCDKDepictBaseURL() {
+        userSettings.cdkDepictBaseURL = "https://www.simolecule.com/cdkdepict/depict"
     }
 }
 

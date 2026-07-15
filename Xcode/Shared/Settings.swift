@@ -18,6 +18,8 @@ class SettingsStorage: ObservableObject {
     var atomStyleSDF: Settings.AtomStyle = .stick
     @AppStorage("orientSDFToWidestFace", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
     var orientSDFToWidestFace: Bool = true
+    @AppStorage("cdkDepictBaseURL", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
+    var cdkDepictBaseURL: String = "https://www.simolecule.com/cdkdepict/depict"
     
     @AppStorage("rotationSpeed", store: UserDefaults(suiteName: "W3SKSV7VPT.group.com.jethrohemmann.QuickLookProtein"))
     var rotationSpeed: Settings.RotationSpeed = .medium

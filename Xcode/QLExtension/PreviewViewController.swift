@@ -61,8 +61,17 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         // Call the completion handler so Quick Look knows that the preview is fully loaded.
         // Quick Look will display a loading spinner while the completion handler is not called.
         
-        let htmlPath = Bundle.main.path(forResource: "3Dmol_viewer", ofType: "html")
         let fileExtension = url.pathExtension.lowercased()
+        if fileExtension == "smi" || fileExtension == "smiles" {
+            let htmlPath = Bundle.main.path(forResource: "SMILES_viewer", ofType: "html")
+            let html = prepareSMILESHTML(htmlPath: htmlPath!, smilesPath: url.path, cdkDepictBaseURL: userSettings.cdkDepictBaseURL, bgColor: userSettings.bgColor)
+            let baseUrl = URL(fileURLWithPath: htmlPath!)
+            self.webView?.loadHTMLString(html, baseURL: baseUrl)
+            handler(nil)
+            return
+        }
+
+        let htmlPath = Bundle.main.path(forResource: "3Dmol_viewer", ofType: "html")
         var atomStyle: Settings.AtomStyle
         
         if fileExtension == "pdb" {
