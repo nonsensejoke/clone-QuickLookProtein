@@ -2,6 +2,11 @@
 
 This fork has several improvements tailor for handling small molecules.
 
+- SDF support formal charge display
+- add multi-model/frame SDF support
+- add MOL2/XYZ support
+- add SMILES display support
+
 # QuickLookProtein
 QuickLookProtein is a macOS Quick Look extension to preview protein/3D structure files (PDB, SDF, CIF). 
 
