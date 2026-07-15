@@ -1,11 +1,16 @@
-# QuickLookProtein2
+# QuickLookProtein2+
 
 This fork has several improvements tailor for handling small molecules.
 
 - SDF support formal charge display
 - add multi-model/frame SDF support
+  
+<img width="400"  alt="Screenshot" src="https://github.com/user-attachments/assets/8f12130d-fdc7-4546-988c-f770a0385e62" />
+
 - add MOL2/XYZ support
 - add SMILES display support
+<img width="400"   alt="Screenshot" src="https://github.com/user-attachments/assets/7de7499b-4920-4395-bf26-84cbd19d3829" />
+
 
 # QuickLookProtein
 QuickLookProtein is a macOS Quick Look extension to preview protein/3D structure files (PDB, SDF, CIF). 
@@ -49,6 +54,7 @@ The following file types are currently supported:
 - .SDF
 - .XYZ
 - .MOL2
+- .SMI/.SMILES
 
 Note that Quick Look extensions depend on the [Uniform Type Identifier (UTI)](https://en.wikipedia.org/wiki/Uniform_Type_Identifier) for the association with a file type, and not simply on the file extension. The UTI of a file may change, depending on the applications you have installed that are associated with the given file type. I tried to register the Quick Look extension with some of the commonly used UTIs for the above file types. But in case the extension is not working on your machine, please let me know the UTI of the file you are trying to preview by running the following command in `Terminal`:
 
