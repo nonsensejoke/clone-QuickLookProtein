@@ -42,6 +42,8 @@ The following file types are currently supported:
 - .PDB
 - .CIF
 - .SDF
+- .XYZ
+- .MOL2
 
 Note that Quick Look extensions depend on the [Uniform Type Identifier (UTI)](https://en.wikipedia.org/wiki/Uniform_Type_Identifier) for the association with a file type, and not simply on the file extension. The UTI of a file may change, depending on the applications you have installed that are associated with the given file type. I tried to register the Quick Look extension with some of the commonly used UTIs for the above file types. But in case the extension is not working on your machine, please let me know the UTI of the file you are trying to preview by running the following command in `Terminal`:
 
