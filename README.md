@@ -2,10 +2,11 @@
 
 This fork has several improvements tailor for handling small molecules.
 
+
 - SDF support formal charge display
 - add multi-model/frame SDF support
-  
-<img width="400"  alt="Screenshot" src="https://github.com/user-attachments/assets/8f12130d-fdc7-4546-988c-f770a0385e62" />
+
+<img width="400"  alt="Screenshot " src="https://github.com/user-attachments/assets/d2fca4d4-7ca9-4d3a-a923-110e49124e8d" />
 
 - add MOL2/XYZ support
 - add SMILES display support
