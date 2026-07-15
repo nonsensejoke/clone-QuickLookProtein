@@ -1,8 +1,6 @@
 # QuickLookProtein2
 
-An improved version with many additional features, including a Windows version, has been developed by Ariorad Moniri. 
-
-I recommend checking out his fork here: https://github.com/ArioMoniri/QuickLookProtein
+This fork has several improvements tailor for handling small molecules.
 
 # QuickLookProtein
 QuickLookProtein is a macOS Quick Look extension to preview protein/3D structure files (PDB, SDF, CIF). 
