@@ -230,6 +230,176 @@
                 return true;
             }
 
+            function formatFormalChargeLabel(charge) {
+                return charge > 0 ? "+" + charge : String(charge);
+            }
+
+            function chargeFromV2000AtomCode(code) {
+                switch (code) {
+                case 1:
+                    return 3;
+                case 2:
+                    return 2;
+                case 3:
+                    return 1;
+                case 5:
+                    return -1;
+                case 6:
+                    return -2;
+                case 7:
+                    return -3;
+                default:
+                    return 0;
+                }
+            }
+
+            function parseSDFFormalCharges(data) {
+                let lines = data.split(/\r?\n|\r/);
+                if (lines.length < 4) {
+                    return [];
+                }
+
+                let countsLine = lines[3] || "";
+                if (countsLine.indexOf("V3000") >= 0) {
+                    return parseV3000FormalCharges(lines);
+                }
+                return parseV2000FormalCharges(lines);
+            }
+
+            function parseV2000FormalCharges(lines) {
+                let atomCount = parseInt((lines[3] || "").substr(0, 3), 10);
+                let bondCount = parseInt((lines[3] || "").substr(3, 3), 10);
+                if (!Number.isFinite(atomCount) || atomCount <= 0) {
+                    return [];
+                }
+                if (!Number.isFinite(bondCount) || bondCount < 0) {
+                    bondCount = 0;
+                }
+
+                let atoms = [];
+                for (let i = 0; i < atomCount; i++) {
+                    let line = lines[4 + i] || "";
+                    let fields = line.trim().split(/\s+/);
+                    if (fields.length < 4) {
+                        continue;
+                    }
+
+                    let charge = 0;
+                    if (fields.length >= 6) {
+                        charge = chargeFromV2000AtomCode(parseInt(fields[5], 10));
+                    }
+
+                    atoms[i] = {
+                        atomIndex: i,
+                        elem: fields[3],
+                        x: parseFloat(fields[0]),
+                        y: parseFloat(fields[1]),
+                        z: parseFloat(fields[2]),
+                        charge: charge
+                    };
+                }
+
+                let propertyStart = 4 + atomCount + bondCount;
+                for (let i = propertyStart; i < lines.length; i++) {
+                    let line = lines[i] || "";
+                    if (line.indexOf("M  CHG") !== 0) {
+                        continue;
+                    }
+
+                    let fields = line.trim().split(/\s+/);
+                    let chargePairCount = parseInt(fields[2], 10);
+                    if (!Number.isFinite(chargePairCount) || chargePairCount <= 0) {
+                        continue;
+                    }
+
+                    for (let pairIndex = 0; pairIndex < chargePairCount; pairIndex++) {
+                        let atomNumber = parseInt(fields[3 + pairIndex * 2], 10);
+                        let charge = parseInt(fields[4 + pairIndex * 2], 10);
+                        let atomIndex = atomNumber - 1;
+                        if (atoms[atomIndex] && Number.isFinite(charge)) {
+                            atoms[atomIndex].charge = charge;
+                        }
+                    }
+                }
+
+                return atoms
+                    .filter(atom => atom && atom.charge !== 0 && isFinitePoint(atom))
+                    .map(atom => ({
+                        atomIndex: atom.atomIndex,
+                        elem: atom.elem,
+                        x: atom.x,
+                        y: atom.y,
+                        z: atom.z,
+                        charge: atom.charge,
+                        text: formatFormalChargeLabel(atom.charge)
+                    }));
+            }
+
+            function parseV3000FormalCharges(lines) {
+                let charges = [];
+                let inAtomBlock = false;
+                for (let line of lines) {
+                    if (line.indexOf("M  V30 BEGIN ATOM") === 0) {
+                        inAtomBlock = true;
+                        continue;
+                    }
+                    if (line.indexOf("M  V30 END ATOM") === 0) {
+                        break;
+                    }
+                    if (!inAtomBlock || line.indexOf("M  V30") !== 0) {
+                        continue;
+                    }
+
+                    let fields = line.substr(6).trim().split(/\s+/);
+                    if (fields.length < 5) {
+                        continue;
+                    }
+
+                    let chargeField = fields.find(field => field.indexOf("CHG=") === 0);
+                    if (!chargeField) {
+                        continue;
+                    }
+
+                    let charge = parseInt(chargeField.substr(4), 10);
+                    let atomIndex = parseInt(fields[0], 10) - 1;
+                    let atom = {
+                        atomIndex: atomIndex,
+                        elem: fields[1],
+                        x: parseFloat(fields[2]),
+                        y: parseFloat(fields[3]),
+                        z: parseFloat(fields[4]),
+                        charge: charge
+                    };
+
+                    if (Number.isFinite(charge) && charge !== 0 && isFinitePoint(atom)) {
+                        atom.text = formatFormalChargeLabel(charge);
+                        charges.push(atom);
+                    }
+                }
+                return charges;
+            }
+
+            function addSDFFormalChargeLabels(viewer, formalCharges) {
+                for (let formalCharge of formalCharges) {
+                    viewer.addLabel(formalCharge.text, {
+                        position: {
+                            x: formalCharge.x,
+                            y: formalCharge.y,
+                            z: formalCharge.z
+                        },
+                        font: "sans-serif",
+                        fontSize: 16,
+                        fontColor: "black",
+                        fontOpacity: 1,
+                        backgroundColor: "white",
+                        backgroundOpacity: 0.65,
+                        borderColor: "black",
+                        borderThickness: 0.5,
+                        inFront: true
+                    });
+                }
+            }
+
             $(function() {
                 let element = $('#3dviewer');
                 let config = { };
@@ -241,6 +411,9 @@
                 viewer.setBackgroundColor(0x{BG_COLOR}, {BG_ALPHA});
                 viewer.addModel(data, "{DATA_FORMAT}");
                 viewer.setStyle({{ATOM_STYLE}: {color: 'spectrum'}});
+                if ("{DATA_FORMAT}" === "sdf") {
+                    addSDFFormalChargeLabels(viewer, parseSDFFormalCharges(data));
+                }
                 viewer.zoomTo();
                 if (orientToWidestFace) {
                     applyWidestFaceOrientation(viewer);
