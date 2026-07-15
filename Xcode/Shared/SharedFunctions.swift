@@ -14,18 +14,11 @@ func prepare3DmolHTML(htmlPath: String, pdbPath: String, dataFormat: String, ato
     do {
         html = try String(contentsOfFile: htmlPath, encoding: .utf8)
         
-        var pdb = try String(contentsOfFile: pdbPath)
-        
-        // prevent some HTML/JS injection attacks
-        pdb = pdb.replacingOccurrences(of: "`", with: "")
-        pdb = pdb.replacingOccurrences(of: "\"", with: "")
-        pdb = pdb.replacingOccurrences(of: "'", with: "")
-        pdb = pdb.replacingOccurrences(of: "//", with: "")
-        pdb = pdb.replacingOccurrences(of: "/*", with: "")
-        pdb = pdb.replacingOccurrences(of: "*/", with: "")
+        let pdb = try String(contentsOfFile: pdbPath)
 
+        let encodedPDB = try String(data: JSONEncoder().encode(pdb), encoding: .utf8)!
         
-        html = html.replacingOccurrences(of: "{PDB_DATA}", with: pdb)
+        html = html.replacingOccurrences(of: "{PDB_DATA}", with: encodedPDB)
     }
     catch {
         html = "Error while loading HTML or PDB"

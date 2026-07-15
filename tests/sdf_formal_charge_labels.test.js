@@ -5,37 +5,45 @@ const vm = require("vm");
 
 const root = path.resolve(__dirname, "..");
 const htmlPath = path.join(root, "Xcode", "Shared", "Assets", "3Dmol_viewer.html");
-const html = fs.readFileSync(htmlPath, "utf8");
 
-const scriptMatch = html.match(/<script>[\s\S]*?\$\(function\(\) \{/);
-assert(scriptMatch, "Expected 3Dmol_viewer.html to contain a script block before document ready");
+function loadViewerHelpers() {
+  const html = fs.readFileSync(htmlPath, "utf8");
+  const scriptMatch = html.match(
+    /<script id="quicklookprotein-viewer-script">([\s\S]*?)<\/script>/
+  );
 
-const helperScript = scriptMatch[0]
-  .replace(/^<script>/, "")
-  .replace(/\$\(function\(\) \{$/, "");
+  assert(scriptMatch, "Expected 3Dmol_viewer.html to contain testable viewer helpers");
 
-const context = { console };
-vm.createContext(context);
-vm.runInContext(helperScript, context);
+  const context = {
+    module: { exports: {} },
+    $: function () {},
+    $3Dmol: {},
+  };
+
+  vm.createContext(context);
+  vm.runInContext(scriptMatch[1], context);
+  return context.module.exports;
+}
 
 function plain(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+const helpers = loadViewerHelpers();
 assert.strictEqual(
-  typeof context.parseSDFFormalCharges,
+  typeof helpers.parseSDFFormalCharges,
   "function",
-  "Expected parseSDFFormalCharges to be defined in 3Dmol_viewer.html"
+  "Expected parseSDFFormalCharges to be exported from 3Dmol_viewer.html"
 );
 assert.strictEqual(
-  typeof context.addSDFFormalChargeLabels,
+  typeof helpers.addSDFFormalChargeLabels,
   "function",
-  "Expected addSDFFormalChargeLabels to be defined in 3Dmol_viewer.html"
+  "Expected addSDFFormalChargeLabels to be exported from 3Dmol_viewer.html"
 );
 
 const userSamplePath = "/Users/ytao/research/aromaticity_checker/test_005-answer_A.sdf";
 const userSample = fs.readFileSync(userSamplePath, "utf8");
-const atomLineCharges = context.parseSDFFormalCharges(userSample);
+const atomLineCharges = helpers.parseSDFFormalCharges(userSample);
 assert.deepStrictEqual(
   plain(atomLineCharges.map(({ atomIndex, charge, text, elem }) => ({ atomIndex, charge, text, elem }))),
   [{ atomIndex: 7, charge: 1, text: "+1", elem: "N" }],
@@ -53,7 +61,7 @@ M  CHG  2   1   1   2  -1
 M  END
 $$$$`;
 
-const mChgCharges = context.parseSDFFormalCharges(mChgSample);
+const mChgCharges = helpers.parseSDFFormalCharges(mChgSample);
 assert.deepStrictEqual(
   plain(mChgCharges.map(({ atomIndex, charge, text, elem }) => ({ atomIndex, charge, text, elem }))),
   [
@@ -64,7 +72,7 @@ assert.deepStrictEqual(
 );
 
 const labels = [];
-context.addSDFFormalChargeLabels(
+helpers.addSDFFormalChargeLabels(
   {
     addLabel(text, options) {
       labels.push({ text, options });

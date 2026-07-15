@@ -71,14 +71,14 @@ class PreviewViewController: NSViewController, QLPreviewingController, WKNavigat
         else if fileExtension == "cif" {
             atomStyle = userSettings.atomStyleCIF
         }
-        else if fileExtension == "sdf" || fileExtension == "xyz" {
+        else if fileExtension == "sdf" || fileExtension == "xyz" || fileExtension == "mol2" {
             atomStyle = userSettings.atomStyleSDF
         }
         else {
             atomStyle = userSettings.atomStylePDB // use PDB style as default
         }
         
-        let orientToWidestFace = (fileExtension == "sdf" || fileExtension == "xyz") && userSettings.orientSDFToWidestFace
+        let orientToWidestFace = (fileExtension == "sdf" || fileExtension == "xyz" || fileExtension == "mol2") && userSettings.orientSDFToWidestFace
         let html = prepare3DmolHTML(htmlPath: htmlPath!, pdbPath: url.path, dataFormat: fileExtension, atomStyle: atomStyle, rotationSpeed: userSettings.rotationSpeed, bgColor: userSettings.bgColor, orientToWidestFace: orientToWidestFace)
         
         let baseUrl = URL(fileURLWithPath: htmlPath!)

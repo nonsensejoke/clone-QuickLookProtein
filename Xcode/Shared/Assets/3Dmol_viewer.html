@@ -3,10 +3,144 @@
     <head>
         <meta charset="utf-8">
         <script src="3Dmol.js"></script>
+        <style>
+            html,
+            body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+
+            .model-nav-button {
+                align-items: center;
+                background: rgba(32, 32, 32, 0.55);
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                display: none;
+                font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+                font-size: 30px;
+                height: 48px;
+                justify-content: center;
+                line-height: 1;
+                padding: 0;
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 42px;
+                z-index: 10;
+            }
+
+            .model-nav-button:hover {
+                background: rgba(32, 32, 32, 0.72);
+            }
+
+            #previousModel {
+                left: 12px;
+            }
+
+            #nextModel {
+                right: 12px;
+            }
+
+            #modelCounter {
+                background: rgba(32, 32, 32, 0.55);
+                border-radius: 8px;
+                bottom: 12px;
+                color: white;
+                display: none;
+                font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+                font-size: 13px;
+                left: 50%;
+                padding: 5px 9px;
+                position: absolute;
+                transform: translateX(-50%);
+                z-index: 10;
+            }
+        </style>
     </head>
     <body>
-        <div style="height: 100vh; width: 100%; position: relative;" id="3dviewer"></div>
-        <script>
+        <div style="height: 100vh; width: 100%; position: relative;" id="3dviewer">
+            <button aria-label="Previous model" class="model-nav-button" id="previousModel" type="button">&lsaquo;</button>
+            <button aria-label="Next model" class="model-nav-button" id="nextModel" type="button">&rsaquo;</button>
+            <div id="modelCounter"></div>
+        </div>
+        <script id="quicklookprotein-viewer-script">
+            function splitSDFModels(data) {
+                let normalizedData = String(data || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+                let models = [];
+                let currentModelLines = [];
+
+                function hasModelContent(lines) {
+                    return lines.some(function(line) {
+                        let trimmedLine = line.trim();
+                        return trimmedLine.length > 0 && trimmedLine !== "$$$$";
+                    });
+                }
+
+                function removeTrailingWhitespace(text) {
+                    return text.replace(/\s+$/, "");
+                }
+
+                function countsLineIndex(lines) {
+                    for (let index = 0; index < lines.length; index++) {
+                        if (/^\s*\d+\s+\d+\s+/.test(lines[index])) {
+                            return index;
+                        }
+                    }
+
+                    return -1;
+                }
+
+                function normalizeSDFModelLines(lines) {
+                    let modelLines = lines.slice();
+                    let countsIndex = countsLineIndex(modelLines);
+
+                    while (
+                        modelLines.length > 0 &&
+                        modelLines[0].trim() === "" &&
+                        (countsIndex === -1 || countsIndex > 3)
+                    ) {
+                        modelLines.shift();
+                        countsIndex = countsLineIndex(modelLines);
+                    }
+
+                    return removeTrailingWhitespace(modelLines.join("\n"));
+                }
+
+                normalizedData.split("\n").forEach(function(line) {
+                    if (line.trim() === "$$$$") {
+                        currentModelLines.push("$$$$");
+
+                        if (hasModelContent(currentModelLines)) {
+                            models.push(normalizeSDFModelLines(currentModelLines));
+                        }
+
+                        currentModelLines = [];
+                    }
+                    else {
+                        currentModelLines.push(line);
+                    }
+                });
+
+                if (hasModelContent(currentModelLines)) {
+                    models.push(normalizeSDFModelLines(currentModelLines));
+                }
+
+                return models.length > 0 ? models : [normalizedData];
+            }
+
+            function formatModelCounter(modelIndex, modelCount) {
+                return String(modelIndex + 1) + " / " + String(modelCount);
+            }
+
+            function styleSpecForAtomStyle(atomStyle) {
+                let styleSpec = {};
+                styleSpec[atomStyle] = {color: 'spectrum'};
+                return styleSpec;
+            }
+
             function isFinitePoint(atom) {
                 return Number.isFinite(atom.x) && Number.isFinite(atom.y) && Number.isFinite(atom.z);
             }
@@ -254,7 +388,7 @@
             }
 
             function parseSDFFormalCharges(data) {
-                let lines = data.split(/\r?\n|\r/);
+                let lines = String(data || "").split(/\r?\n|\r/);
                 if (lines.length < 4) {
                     return [];
                 }
@@ -400,26 +534,79 @@
                 }
             }
 
+            if (typeof module !== "undefined") {
+                module.exports = {
+                    splitSDFModels: splitSDFModels,
+                    formatModelCounter: formatModelCounter,
+                    styleSpecForAtomStyle: styleSpecForAtomStyle,
+                    parseSDFFormalCharges: parseSDFFormalCharges,
+                    addSDFFormalChargeLabels: addSDFFormalChargeLabels
+                };
+            }
+
             $(function() {
                 let element = $('#3dviewer');
                 let config = { };
                 let viewer = $3Dmol.createViewer( element, config );
                 
-                let data = `{PDB_DATA}`;
+                let data = {PDB_DATA};
+                let dataFormat = "{DATA_FORMAT}";
+                let atomStyle = "{ATOM_STYLE}";
+                let backgroundColor = Number("0x{BG_COLOR}");
+                let backgroundAlpha = Number("{BG_ALPHA}");
+                let rotationSpeed = Number("{ROTATION_SPEED}");
                 let orientToWidestFace = {ORIENT_TO_WIDEST_FACE};
-                
-                viewer.setBackgroundColor(0x{BG_COLOR}, {BG_ALPHA});
-                viewer.addModel(data, "{DATA_FORMAT}");
-                viewer.setStyle({{ATOM_STYLE}: {color: 'spectrum'}});
-                if ("{DATA_FORMAT}" === "sdf") {
-                    addSDFFormalChargeLabels(viewer, parseSDFFormalCharges(data));
+                let models = dataFormat === "sdf" ? splitSDFModels(data) : [data];
+                let currentModelIndex = 0;
+
+                let previousButton = document.getElementById("previousModel");
+                let nextButton = document.getElementById("nextModel");
+                let modelCounter = document.getElementById("modelCounter");
+
+                function updateModelControls() {
+                    if (models.length <= 1) {
+                        previousButton.style.display = "none";
+                        nextButton.style.display = "none";
+                        modelCounter.style.display = "none";
+                        return;
+                    }
+
+                    previousButton.style.display = "flex";
+                    nextButton.style.display = "flex";
+                    modelCounter.style.display = "block";
+                    modelCounter.textContent = formatModelCounter(currentModelIndex, models.length);
                 }
-                viewer.zoomTo();
-                if (orientToWidestFace) {
-                    applyWidestFaceOrientation(viewer);
+
+                function renderModel(modelIndex) {
+                    currentModelIndex = (modelIndex + models.length) % models.length;
+
+                    viewer.clear();
+                    viewer.setBackgroundColor(backgroundColor, backgroundAlpha);
+                    viewer.addModel(models[currentModelIndex], dataFormat);
+                    viewer.setStyle(styleSpecForAtomStyle(atomStyle));
+                    if (dataFormat === "sdf") {
+                        addSDFFormalChargeLabels(viewer, parseSDFFormalCharges(models[currentModelIndex]));
+                    }
+                    viewer.zoomTo();
+                    if (orientToWidestFace) {
+                        applyWidestFaceOrientation(viewer);
+                    }
+                    viewer.render();
+                    viewer.spin("y", rotationSpeed);
+                    updateModelControls();
                 }
-                viewer.render();
-                viewer.spin("y", {ROTATION_SPEED})
+
+                previousButton.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    renderModel(currentModelIndex - 1);
+                });
+
+                nextButton.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    renderModel(currentModelIndex + 1);
+                });
+
+                renderModel(currentModelIndex);
             });
         </script>
     </body>
