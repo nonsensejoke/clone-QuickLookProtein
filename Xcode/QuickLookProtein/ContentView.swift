@@ -56,6 +56,9 @@ struct ContentView: View {
                         Form {
                             TextField("CDK Depict service URL", text: $userSettings.cdkDepictBaseURL)
                                 .help("Default: https://www.simolecule.com/cdkdepict/depict. Local services such as http://localhost:8081 are normalized to /depict.")
+                            Button(action: useVHP4SafetyCDKDepictBaseURL) {
+                                Text("Use VHP4Safety CDK Depict URL")
+                            }
                             Button(action: resetCDKDepictBaseURL) {
                                 Text("Reset CDK Depict URL")
                             }
@@ -154,6 +157,10 @@ struct ContentView: View {
 
     func resetCDKDepictBaseURL() {
         userSettings.cdkDepictBaseURL = "https://www.simolecule.com/cdkdepict/depict"
+    }
+
+    func useVHP4SafetyCDKDepictBaseURL() {
+        userSettings.cdkDepictBaseURL = "https://cdkdepict.cloud.vhp4safety.nl/depict"
     }
 }
 

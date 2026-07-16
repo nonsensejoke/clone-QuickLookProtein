@@ -34,6 +34,16 @@ if ! grep -q 'CDK Depict service URL' "$CONTENT_SWIFT"; then
   exit 1
 fi
 
+if ! grep -q 'https://cdkdepict.cloud.vhp4safety.nl/depict' "$CONTENT_SWIFT"; then
+  echo "Expected the settings UI to expose the VHP4Safety CDK Depict preset URL"
+  exit 1
+fi
+
+if ! grep -q 'useVHP4SafetyCDKDepictBaseURL' "$CONTENT_SWIFT"; then
+  echo "Expected the settings UI to provide an action for the VHP4Safety CDK Depict preset"
+  exit 1
+fi
+
 if ! grep -q 'SMILES_viewer.html' "$PROJECT_FILE"; then
   echo "Expected SMILES_viewer.html to be registered in the Xcode project"
   exit 1
